@@ -17,25 +17,27 @@
   (load "/pass")
   (catch Exception e))
 
+(def api-root "https://api.orchestrate.io/v0")
+
 (defn api-url
   "constructor for orchestrate urls, it will turn keywords into
   strings and separate components with slashes"
   [& strs]
   (->> strs
-       (cons "https://api.orchestrate.io/v0")
+       (cons api-root)
        (map (fn [s] (if (keyword? s)
                       (name s)
                       s)))
        (string/join "/")))
 
-(defn- etag->ref
+(defn etag->ref
   "etags come back like \"\"foo\"\" or \"\"foo-gzip\"\" (that is, a
   string with double-quotes inside, and potentially a -gzip, too --
   strip out the extra stuff so we end up with just \"foo\""
   [s]
   (.replaceFirst s "^\"(.*?)(-gzip)?\"$" "$1"))
 
-(defn- ref->etag
+(defn ref->etag
   "surrounds a ref in double quotes"
   [s]
   (str "\"" s "\""))
@@ -82,7 +84,7 @@
                                                 :headers headers}))
             ref (etag->ref (:etag headers))]
         (with-meta newval
-          {:coll coll
+          {:collection coll
            :key key
            :ref ref}))
       (catch [:status 412] []

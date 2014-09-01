@@ -21,6 +21,11 @@
 
 (defn atom
   "oatom constructor"
+  ;; it doesn't take an initial value, because we're building an
+  ;; object for representing a remote cell, and there might already be
+  ;; a value there.
+
+  ;; also we're not doing anything fancy like :metadata-map or validators
   [coll key]
   (->OAtom coll key))
 

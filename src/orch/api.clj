@@ -49,16 +49,16 @@
 (defn get
   "get the current value of a object, or the value for a specific ref
   of that object "
-  {:arglists '[[coll id] [coll id :refs ref]]}
-  [coll id & args]
+  {:arglists '[[coll key] [coll key :refs ref]]}
+  [coll key & args]
   (try+
-   (let [{:keys [headers body] :as r} (http/get (apply api-url coll id args)
+   (let [{:keys [headers body] :as r} (http/get (apply api-url coll key args)
                                                 {:basic-auth api-key
                                                  :as :json})
          ref (etag->ref (:etag headers))]
      (with-meta body
        {:collection coll
-        :key id
+        :key key
         :ref ref}))
    (catch [:status 404] []
      ;; it doesn't exist
@@ -67,15 +67,15 @@
 (defn put!
   "put a new value for an object, potentially comparing against an
   existing value before doing so"
-  ([coll id newval]
-     (put! coll id nil newval))
-  ([coll id oldref newval]
+  ([coll key newval]
+     (put! coll key nil newval))
+  ([coll key oldref newval]
      (try+
       (let [headers (when oldref
                       (if (= oldref :none)
                         {:if-none-match (ref->etag "*")}
                         {:if-match (ref->etag oldref)}))
-            {:keys [headers]} (http/put (api-url coll id)
+            {:keys [headers]} (http/put (api-url coll key)
                                         (merge {:basic-auth api-key
                                                 :content-type :json
                                                 :form-params newval
@@ -83,7 +83,7 @@
             ref (etag->ref (:etag headers))]
         (with-meta newval
           {:coll coll
-           :id id
+           :key key
            :ref ref}))
       (catch [:status 412] []
         ;; ignorable: you none for oldref and there was already a
@@ -93,15 +93,15 @@
 (defn delete!
   "delete an entire collection or just an individual object within a collection"
   {:arglists '[[coll force?]
-               [coll id]
-               [coll id purge?]]}
+               [coll key]
+               [coll key purge?]]}
   [coll & args]
   ;; eh, this is a little gross, but the delete operation is a little
   ;; complicated since it can serve for entire collections or
   ;; individual objects
-  (let [[id param] (map first ((juxt remove filter) keyword? args))]
-    (http/delete (if id
-                   (api-url coll id)
+  (let [[key param] (map first ((juxt remove filter) keyword? args))]
+    (http/delete (if key
+                   (api-url coll key)
                    (api-url coll))
                  (merge {:basic-auth api-key}
                         (if param

@@ -78,6 +78,7 @@ Let's see an example:
     ```http
     HTTP/1.1 200 OK
     Content-Location: /v0/product/1/refs/8f4d2c6d1202bdcd
+    Content-Type: application/json
     Etag: "8f4d2c6d1202bdcd"
 
     { "id": 12345, "title": "Apple iPad Air", "price_usd": 599.99 }
